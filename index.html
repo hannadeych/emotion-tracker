@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emotion Tracker</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #f0f2f5;
+  color: #1a1a2e;
+  min-height: 100vh;
+  padding: 20px;
+}
+.container {
+  max-width: 620px;
+  margin: 0 auto;
+}
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,.08);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+h1 {
+  font-size: 22px;
+  text-align: center;
+  margin-bottom: 24px;
+  font-weight: 700;
+}
+/* Progress */
+.progress-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.progress-step {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: #e0e0e0;
+  transition: background .3s;
+}
+.progress-step.active { background: #6c63ff; }
+.progress-step.done { background: #4caf84; }
+.step-label {
+  text-align: center;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 20px;
+}
+/* Tabs */
+.tabs {
+  display: flex;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e0e0e0;
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all .2s;
+}
+.tab-btn.active {
+  color: #6c63ff;
+  border-bottom-color: #6c63ff;
+}
+/* Checkbox grid */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all .15s;
+  user-select: none;
+}
+.checkbox-group label:hover { border-color: #b0b0ff; }
+.checkbox-group label.checked {
+  border-color: #6c63ff;
+  background: #f0eeff;
+}
+.checkbox-group label input { display: none; }
+.checkmark {
+  width: 20px; height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.checked .checkmark {
+  background: #6c63ff;
+  border-color: #6c63ff;
+}
+.checked .checkmark::after {
+  content: '✓';
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+/* Body zone sections */
+.zone-section {
+  margin-bottom: 16px;
+}
+.zone-section h3 {
+  font-size: 13px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 8px;
+  padding-left: 4px;
+}
+/* Buttons */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+.btn {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  flex: 1;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary {
+  background: #6c63ff;
+  color: #fff;
+}
+.btn-primary:hover { background: #5a52e0; }
+.btn-primary:disabled {
+  background: #c8c5f0;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn-secondary {
+  background: #f0f0f0;
+  color: #444;
+}
+.btn-secondary:hover { background: #e4e4e4; }
+.btn-danger {
+  background: #fff0f0;
+  color: #d32f2f;
+}
+.btn-danger:hover { background: #fde0e0; }
+.btn-green {
+  background: #4caf84;
+  color: #fff;
+}
+.btn-green:hover { background: #3d9e73; }
+/* Recommendation cards */
+.rec-card {
+  border: 2px solid #e8e8e8;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 14px;
+  transition: border-color .2s;
+}
+.rec-card:hover { border-color: #c0bfff; }
+.rec-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.rec-duration {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 10px;
+}
+.rec-steps {
+  list-style: none;
+  padding: 0;
+}
+.rec-steps li {
+  font-size: 14px;
+  padding: 4px 0;
+  padding-left: 20px;
+  position: relative;
+  color: #444;
+}
+.rec-steps li::before {
+  content: attr(data-n);
+  position: absolute;
+  left: 0;
+  color: #6c63ff;
+  font-weight: 700;
+  font-size: 13px;
+}
+/* History */
+.history-item {
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.history-item .meta {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+}
+.history-item .tags {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.history-item .tags span {
+  display: inline-block;
+  background: #f0eeff;
+  color: #6c63ff;
+  padding: 2px 10px;
+  border-radius: 6px;
+  margin: 2px 4px 2px 0;
+  font-size: 12px;
+}
+.history-item .tags span.body-tag {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.del-btn {
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #999;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.del-btn:hover { border-color: #d32f2f; color: #d32f2f; }
+.empty-msg {
+  text-align: center;
+  color: #aaa;
+  padding: 32px 0;
+  font-size: 14px;
+}
+.saved-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #333;
+  color: #fff;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transition: all .35s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+.saved-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="tracker">Трекер</button>
+    <button class="tab-btn" data-tab="history">История</button>
+  </div>
+
+  <!-- TRACKER -->
+  <div id="tracker-view">
+    <div class="card">
+      <div class="progress-bar">
+        <div class="progress-step" id="ps1"></div>
+        <div class="progress-step" id="ps2"></div>
+        <div class="progress-step" id="ps3"></div>
+      </div>
+      <div class="step-label" id="step-label"></div>
+
+      <!-- Step 1 -->
+      <div id="step1" class="step" style="display:none">
+        <h1>Что ты сейчас чувствуешь?</h1>
+        <div class="checkbox-group" id="emotions-list"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-next1" disabled>Далее</button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div id="step2" class="step" style="display:none">
+        <h1>Где это в теле?</h1>
+        <div id="body-list"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="btn-back2">Назад</button>
+          <button class="btn btn-primary" id="btn-next2" disabled>Далее</button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div id="step3" class="step" style="display:none">
+        <h1>Что сделать сейчас?</h1>
+        <div id="recs-list"></div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="btn-back3">Назад</button>
+          <button class="btn btn-green" id="btn-save">Сохранить</button>
+          <button class="btn btn-danger" id="btn-reset">Заново</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="history-view" style="display:none">
+    <div class="card">
+      <h1>История записей</h1>
+      <div id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="saved-toast" id="toast"></div>
+
+<script>
+// === DATA ===
+const EMOTIONS = [
+  { label: 'Радость',     tags: ['joy'] },
+  { label: 'Грусть',      tags: ['sadness'] },
+  { label: 'Злость',      tags: ['anger'] },
+  { label: 'Тревога',     tags: ['anxiety'] },
+  { label: 'Страх',       tags: ['fear'] },
+  { label: 'Стыд',        tags: ['shame'] },
+  { label: 'Вина',        tags: ['guilt'] },
+  { label: 'Отвращение',  tags: ['disgust'] },
+  { label: 'Спокойствие', tags: ['calm'] },
+  { label: 'Усталость',   tags: ['tiredness'] },
+];
+
+const BODY_ZONES = [
+  { section: 'Голова', items: [
+    { label: 'Лоб',     tags: ['head'] },
+    { label: 'Виски',   tags: ['head'] },
+    { label: 'Затылок', tags: ['head'] },
+  ]},
+  { section: 'Лицо', items: [
+    { label: 'Глаза',   tags: ['head','eyes'] },
+    { label: 'Челюсть', tags: ['head','jaw'] },
+  ]},
+  { section: 'Шея и горло', items: [
+    { label: 'Горло', tags: ['throat'] },
+    { label: 'Шея',   tags: ['neck'] },
+  ]},
+  { section: 'Верх спины и плечи', items: [
+    { label: 'Плечи',   tags: ['shoulders'] },
+    { label: 'Лопатки', tags: ['shoulders','back'] },
+  ]},
+  { section: 'Грудь', items: [
+    { label: 'Грудь',              tags: ['chest'] },
+    { label: 'Сердце / центр груди', tags: ['chest','heart'] },
+    { label: 'Диафрагма',          tags: ['chest','diaphragm'] },
+  ]},
+  { section: 'Живот', items: [
+    { label: 'Живот (верх)', tags: ['belly'] },
+    { label: 'Живот (низ)',  tags: ['belly'] },
+  ]},
+  { section: 'Спина / Поясница', items: [
+    { label: 'Поясница',                    tags: ['back','lower_back'] },
+    { label: 'Позвоночник — шейный отдел',   tags: ['back','neck'] },
+    { label: 'Позвоночник — грудной отдел',  tags: ['back','chest'] },
+    { label: 'Позвоночник — поясничный отдел', tags: ['back','lower_back'] },
+  ]},
+  { section: 'Руки', items: [
+    { label: 'Кисти',      tags: ['hands'] },
+    { label: 'Предплечья', tags: ['hands'] },
+  ]},
+  { section: 'Ноги', items: [
+    { label: 'Бёдра',  tags: ['legs'] },
+    { label: 'Икры',   tags: ['legs'] },
+    { label: 'Ступни', tags: ['legs','feet'] },
+  ]},
+];
+
+const RECOMMENDATIONS = [
+  {
+    title: 'Дыхание 4-7-8',
+    steps: ['Вдох через нос на 4 счёта', 'Задержка на 7 счётов', 'Медленный выдох ртом на 8 счётов'],
+    duration: '3 мин',
+    tags: ['anxiety','fear','chest','diaphragm','heart','anger'],
+  },
+  {
+    title: 'Сканирование тела',
+    steps: ['Закрой глаза, направь внимание на макушку', 'Медленно «просканируй» всё тело вниз', 'Отмечай ощущения без оценки'],
+    duration: '5 мин',
+    tags: ['anxiety','tiredness','back','belly','chest','head','calm'],
+  },
+  {
+    title: 'Встряхивание',
+    steps: ['Встань, потряси руками и ногами 30 сек', 'Добавь всё тело — трясись свободно', 'Остановись и почувствуй тепло'],
+    duration: '2 мин',
+    tags: ['anger','fear','shoulders','hands','legs','disgust'],
+  },
+  {
+    title: 'Заземление 5-4-3-2-1',
+    steps: ['Назови 5 вещей, которые видишь', 'Назови 4 звука, 3 текстуры, 2 запаха, 1 вкус', 'Сделай глубокий вдох'],
+    duration: '3 мин',
+    tags: ['anxiety','fear','head','eyes','shame','guilt'],
+  },
+  {
+    title: 'Письмо свободным потоком',
+    steps: ['Возьми бумагу / открой заметки', 'Пиши всё что в голове 3 минуты без остановки', 'Не перечитывай — просто выпусти'],
+    duration: '3–5 мин',
+    tags: ['sadness','guilt','shame','anger','anxiety','head'],
+  },
+  {
+    title: 'Растяжка шеи и плеч',
+    steps: ['Медленно наклони голову к правому плечу, задержи 15 сек', 'Повтори на левую сторону', 'Сделай 5 круговых движений плечами'],
+    duration: '3 мин',
+    tags: ['tiredness','shoulders','neck','head','back','jaw'],
+  },
+  {
+    title: 'Прохладная вода на лицо',
+    steps: ['Набери холодную воду в ладони', 'Умойся, задержи воду на лице 10 сек', 'Повтори 2–3 раза, дыши спокойно'],
+    duration: '1 мин',
+    tags: ['anger','anxiety','head','eyes','disgust'],
+  },
+  {
+    title: 'Техника «Безопасное место»',
+    steps: ['Закрой глаза и представь место, где тебе спокойно', 'Добавь детали: звуки, запахи, ощущения', 'Побудь там 2–3 минуты'],
+    duration: '3 мин',
+    tags: ['fear','sadness','anxiety','shame','chest','heart','belly'],
+  },
+  {
+    title: 'Расслабление кистей',
+    steps: ['Сожми кулаки крепко на 5 сек', 'Резко разожми и расслабь пальцы', 'Повтори 5 раз, отмечая разницу'],
+    duration: '2 мин',
+    tags: ['anger','anxiety','hands','tiredness','shoulders'],
+  },
+  {
+    title: 'Расслабление живота',
+    steps: ['Положи руки на живот', 'Дыши так, чтобы руки поднимались на вдохе', 'На выдохе расслабляй живот полностью'],
+    duration: '3 мин',
+    tags: ['anxiety','fear','belly','diaphragm','guilt','shame'],
+  },
+  {
+    title: 'Ходьба с вниманием',
+    steps: ['Встань и пройдись медленно по комнате', 'Чувствуй каждый шаг: пятка → носок', 'Синхронизируй дыхание с шагами'],
+    duration: '3–5 мин',
+    tags: ['sadness','tiredness','legs','feet','calm','belly'],
+  },
+  {
+    title: 'Объятие «бабочка»',
+    steps: ['Скрести руки на груди, ладони на плечах', 'Поочерёдно постукивай правой и левой рукой', 'Продолжай 1–2 минуты, дыши ровно'],
+    duration: '2 мин',
+    tags: ['fear','sadness','shame','chest','heart','shoulders'],
+  },
+];
+
+// === STATE ===
+let currentStep = 1;
+let selectedEmotions = [];
+let selectedBody = [];
+let shownRecs = [];
+
+// === RENDER ===
+function renderEmotions() {
+  const el = document.getElementById('emotions-list');
+  el.innerHTML = EMOTIONS.map((e, i) =>
+    `<label data-idx="${i}"><input type="checkbox"><span class="checkmark"></span>${e.label}</label>`
+  ).join('');
+  el.addEventListener('change', () => {
+    selectedEmotions = [];
+    el.querySelectorAll('label').forEach((lbl, i) => {
+      const cb = lbl.querySelector('input');
+      lbl.classList.toggle('checked', cb.checked);
+      if (cb.checked) selectedEmotions.push(EMOTIONS[i]);
+    });
+    document.getElementById('btn-next1').disabled = selectedEmotions.length === 0;
+  });
+}
+
+function renderBody() {
+  const el = document.getElementById('body-list');
+  el.innerHTML = BODY_ZONES.map((section, si) =>
+    `<div class="zone-section"><h3>${section.section}</h3><div class="checkbox-group">${
+      section.items.map((item, ii) =>
+        `<label data-si="${si}" data-ii="${ii}"><input type="checkbox"><span class="checkmark"></span>${item.label}</label>`
+      ).join('')
+    }</div></div>`
+  ).join('');
+  el.addEventListener('change', () => {
+    selectedBody = [];
+    el.querySelectorAll('label').forEach(lbl => {
+      const cb = lbl.querySelector('input');
+      lbl.classList.toggle('checked', cb.checked);
+      if (cb.checked) {
+        const si = +lbl.dataset.si, ii = +lbl.dataset.ii;
+        selectedBody.push(BODY_ZONES[si].items[ii]);
+      }
+    });
+    document.getElementById('btn-next2').disabled = selectedBody.length === 0;
+  });
+}
+
+function getRecommendations() {
+  const userTags = new Set();
+  selectedEmotions.forEach(e => e.tags.forEach(t => userTags.add(t)));
+  selectedBody.forEach(b => b.tags.forEach(t => userTags.add(t)));
+
+  const scored = RECOMMENDATIONS.map(r => {
+    let score = 0;
+    r.tags.forEach(t => { if (userTags.has(t)) score++; });
+    return { ...r, score };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.filter(r => r.score > 0).slice(0, 5).length >= 3
+    ? scored.filter(r => r.score > 0).slice(0, 5)
+    : scored.slice(0, 3);
+}
+
+function renderRecs() {
+  shownRecs = getRecommendations();
+  const el = document.getElementById('recs-list');
+  el.innerHTML = shownRecs.map(r =>
+    `<div class="rec-card">
+      <div class="rec-title">${r.title}</div>
+      <div class="rec-duration">${r.duration}</div>
+      <ol class="rec-steps">${r.steps.map((s, i) =>
+        `<li data-n="${i+1}.">${s}</li>`
+      ).join('')}</ol>
+    </div>`
+  ).join('');
+}
+
+function goToStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.step').forEach(s => s.style.display = 'none');
+  document.getElementById('step' + n).style.display = '';
+
+  ['ps1','ps2','ps3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.className = 'progress-step';
+    if (i + 1 < n) el.classList.add('done');
+    else if (i + 1 === n) el.classList.add('active');
+  });
+  document.getElementById('step-label').textContent = `Шаг ${n} из 3`;
+
+  if (n === 3) renderRecs();
+}
+
+// === HISTORY ===
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('emotion_history') || '[]'); }
+  catch { return []; }
+}
+
+function saveEntry() {
+  const history = getHistory();
+  history.unshift({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    createdAt: new Date().toISOString(),
+    emotions: selectedEmotions.map(e => e.label),
+    body: selectedBody.map(b => b.label),
+    recommendationsShown: shownRecs.map(r => r.title),
+  });
+  localStorage.setItem('emotion_history', JSON.stringify(history));
+  showToast('Запись сохранена');
+}
+
+function deleteEntry(id) {
+  const history = getHistory().filter(e => e.id !== id);
+  localStorage.setItem('emotion_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const history = getHistory();
+  if (!history.length) {
+    list.innerHTML = '<div class="empty-msg">Пока нет записей</div>';
+    return;
+  }
+  list.innerHTML = history.map(e => {
+    const d = new Date(e.createdAt);
+    const date = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+    const time = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    return `<div class="history-item">
+      <div>
+        <div class="meta">${date}, ${time}</div>
+        <div class="tags">${e.emotions.map(t => `<span>${t}</span>`).join('')}</div>
+        <div class="tags">${e.body.map(t => `<span class="body-tag">${t}</span>`).join('')}</div>
+      </div>
+      <button class="del-btn" onclick="deleteEntry('${e.id}')">Удалить</button>
+    </div>`;
+  }).join('');
+}
+
+function resetWizard() {
+  selectedEmotions = [];
+  selectedBody = [];
+  shownRecs = [];
+  document.querySelectorAll('.checkbox-group label').forEach(lbl => {
+    lbl.classList.remove('checked');
+    lbl.querySelector('input').checked = false;
+  });
+  document.getElementById('btn-next1').disabled = true;
+  document.getElementById('btn-next2').disabled = true;
+  goToStep(1);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// === TABS ===
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    document.getElementById('tracker-view').style.display = tab === 'tracker' ? '' : 'none';
+    document.getElementById('history-view').style.display = tab === 'history' ? '' : 'none';
+    if (tab === 'history') renderHistory();
+  });
+});
+
+// === BUTTONS ===
+document.getElementById('btn-next1').addEventListener('click', () => goToStep(2));
+document.getElementById('btn-next2').addEventListener('click', () => goToStep(3));
+document.getElementById('btn-back2').addEventListener('click', () => goToStep(1));
+document.getElementById('btn-back3').addEventListener('click', () => goToStep(2));
+document.getElementById('btn-save').addEventListener('click', () => {
+  saveEntry();
+  renderHistory();
+});
+document.getElementById('btn-reset').addEventListener('click', resetWizard);
+
+// === INIT ===
+renderEmotions();
+renderBody();
+goToStep(1);
+</script>
+</body>
+</html>
